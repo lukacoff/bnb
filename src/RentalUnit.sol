@@ -102,6 +102,10 @@ contract RentalUnit is IRentalUnit, ERC721Pausable, IERC7858, Ownable {
         return IERC7858.EXPIRY_TYPE.TIME_BASED;
     }
 
+    function getInfo() external view returns (RentalInfo memory) {
+        return rentalInfo;
+    }
+
     function isTokenExpired(uint256 tokenId) external view returns (bool) {
         if (_ownerOf(tokenId) == address(0)) {
             revert ERC721NonexistentToken(tokenId);
