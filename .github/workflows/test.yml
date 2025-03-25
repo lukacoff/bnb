@@ -28,8 +28,6 @@ jobs:
       - name: Install solady
         run: |
           forge soldeer install solady~0.1.12
-        paths:
-          - dependencies/
 
       - name: Show Forge version
         run: |
