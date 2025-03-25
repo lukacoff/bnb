@@ -24,6 +24,10 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+      
+      - name: Install solady
+        run: |
+          forge soldeer install solady~0.1.12
 
       - name: Show Forge version
         run: |
