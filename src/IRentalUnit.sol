@@ -6,7 +6,7 @@ interface IRentalUnit {
 
     function reserve(address customer, uint256 start, uint256 numberNights) external payable;
 
-    function setNewSeason(uint256 year, uint256 start, uint256 numberNights) external;
+    function addSeason(uint256 start, uint256 numberNights) external returns (uint256);
 
     function setCurrentSeason(uint256 year) external;
 

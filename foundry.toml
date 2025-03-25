@@ -1,12 +1,19 @@
 [profile.default]
 src = "src"
 out = "out"
-libs = ["lib"]
+libs = ["dependencies"]
 solc-version = "0.8.29"
 
 remappings = [
-    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "@openzeppelin/contracts/=dependencies/@openzeppelin-contracts-5.2.0/",
+    "solady/=dependencies/solady-0.1.12/src/",
+    "forge-std/=dependencies/forge-std-1.9.6/src/",
 ]
 
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+[dependencies]
+solady = "0.1.12"
+forge-std = "1.9.6"
+"@openzeppelin-contracts" = "5.2.0"
