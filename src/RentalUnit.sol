@@ -311,6 +311,4 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         _paused = state;
         emit Pause(msg.sender, state);
     }
-
-    // todo withdraw
 }
