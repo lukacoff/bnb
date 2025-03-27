@@ -16,29 +16,10 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
 
     event WithdrawBalance();
 
-    struct RentalInfo {
-        string title;
-        string symbol;
-        string country;
-        string city;
-        string street;
-        string description;
-        string category;
-        string imagesURL;
-        uint256 capacity;
-        uint256 pricePerNight;
-    }
-
     struct Reservation {
         address customer;
         uint256 start;
         uint256 end;
-    }
-
-    struct Season {
-        uint256 start;
-        uint256 end;
-        uint256 numberDays;
     }
 
     RentalInfo public rentalInfo;
@@ -114,10 +95,6 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         return seasonId;
     }
 
-    function pause() external onlyOwner {
-        _setPause(true);
-    }
-
     function reserve(address customer, uint256 start, uint256 numberNights) external payable {
         if (customer == address(0)) revert Errors.ZeroCustomer();
 
@@ -168,6 +145,10 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         emit SeasonSet(seasonId, season.start, season.end);
     }
 
+    function setPause(bool state) external onlyOwner {
+        _setPause(state);
+    }
+
     function updateCapacity(uint256 newCapacity) external onlyOwner {
         if (newCapacity == 0) revert Errors.InvalidCapacity();
 
@@ -204,10 +185,6 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         emit RentalInfoUpdated();
     }
 
-    function unpause() external onlyOwner {
-        _setPause(false);
-    }
-
     function withdraw() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
 
@@ -242,8 +219,20 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         return _reservations[tokenId].end;
     }
 
+    function expiryType() external pure returns (EXPIRY_TYPE) {
+        return IERC7858.EXPIRY_TYPE.TIME_BASED;
+    }
+
     function getInfo() external view returns (RentalInfo memory) {
         return rentalInfo;
+    }
+
+    function getSeason(uint256 seasonId) external view returns (Season memory) {
+        return seasons[seasonId];
+    }
+
+    function getSetSeasonId() external view returns (uint256) {
+        return _currentSeason;
     }
 
     function isTokenExpired(uint256 tokenId) external view returns (bool) {
@@ -267,8 +256,8 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         return _reservations[tokenId].start;
     }
 
-    function expiryType() external pure returns (EXPIRY_TYPE) {
-        return IERC7858.EXPIRY_TYPE.TIME_BASED;
+    function paused() external view returns (bool) {
+        return _paused;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -308,6 +297,7 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
     }
 
     function _setPause(bool state) internal {
+        if (_paused == state) revert Errors.PauseStateUnchanged();
         _paused = state;
         emit Pause(msg.sender, state);
     }

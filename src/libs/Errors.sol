@@ -49,4 +49,6 @@ library Errors {
     error ZeroCustomer();
 
     error InsufficientPayment();
+
+    error PauseStateUnchanged();
 }
