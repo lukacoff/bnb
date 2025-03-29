@@ -64,3 +64,6 @@ $ forge --help
 $ anvil --help
 $ cast --help
 ```
+
+### Test Coverage
+[Open coverage](./coverage/index.html)
