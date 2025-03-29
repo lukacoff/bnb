@@ -42,7 +42,7 @@ jobs:
         run: |
           echo "Current path: $(pwd)"
           echo "Listing project files:"
-          find /home/ -type d -name "solady*"
+          find /home/bnb/ -type d -name "solady*"
 
       - name: Run Forge build
         run: |
