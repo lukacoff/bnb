@@ -3,11 +3,15 @@ pragma solidity ^0.8.29;
 
 import {Test, console} from "forge-std/Test.sol";
 import {RentalUnit} from "../src/RentalUnit.sol";
+import {IRentalUnit} from "../src/IRentalUnit.sol";
 import {ERC721} from "solady/tokens/ERC721.sol";
 import {IERC7858} from "../src/ERC7858/IERC7858.sol";
 import {RentalInfo, Season} from "../src/RentalUnitStructs.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {Errors} from "../src/libs/Errors.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721Metadata} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract RentalUnitTest is Test {
     RentalUnit public rentalUnit;
@@ -382,9 +386,9 @@ contract RentalUnitTest is Test {
         rentalUnit.updatePricePerNight(100 ether);
     }
 
-    // /*//////////////////////////////////////////////////////////////
-    //                        reserve
-    // //////////////////////////////////////////////////////////////*/
+    /*//////////////////////////////////////////////////////////////
+                           reserve
+    //////////////////////////////////////////////////////////////*/
     function testReserveSuccess() public {
         setSeason(100);
         uint256 startMidnight = getNextMidnight();
@@ -480,6 +484,22 @@ contract RentalUnitTest is Test {
         assertEq(rentalUnit.endTime(1), checkOut);
     }
 
+    function testReserveRevertPaused() public {
+        setSeason(100);
+        uint256 startMidnight = getNextMidnight();
+        uint256 numberNights = 10;
+        uint256 cost = rentalUnit.reservationCost(numberNights);
+
+        vm.deal(customer, cost);
+
+        vm.prank(owner);
+        rentalUnit.setPause(true);
+
+        vm.prank(customer);
+        vm.expectRevert(Errors.ReservationPaused.selector);
+        rentalUnit.reserve{value: cost}(customer, startMidnight, numberNights);
+    }
+
     function testRevertIfZeroCustomer() public {
         uint256 cost = rentalUnit.reservationCost(10);
         vm.expectRevert(Errors.ZeroCustomer.selector);
@@ -515,7 +535,6 @@ contract RentalUnitTest is Test {
         setSeason(100);
         uint256 startMidnight = getNextMidnight() + 1 days;
         uint256 numberNights = 10;
-        uint256 end = startMidnight + numberNights * 1 days;
         uint256 cost = rentalUnit.reservationCost(numberNights);
 
         vm.deal(customer, cost - 1);
@@ -571,5 +590,191 @@ contract RentalUnitTest is Test {
         vm.prank(customer);
         vm.expectRevert(Errors.OverlappingReservation.selector);
         rentalUnit.reserve{value: cost}(customer, startMidnight, numberNights);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           withdraw
+    //////////////////////////////////////////////////////////////*/
+    function testWithdrawSuccess() public {
+        setSeason(100);
+        uint256 startMidnight = getNextMidnight();
+        uint256 numberNights = 10;
+        uint256 cost = rentalUnit.reservationCost(numberNights);
+
+        vm.deal(customer, cost);
+
+        assertEq(owner.balance, 0);
+
+        vm.prank(customer);
+        rentalUnit.reserve{value: cost}(customer, startMidnight, numberNights);
+
+        vm.prank(owner);
+        rentalUnit.withdraw();
+
+        assertEq(owner.balance, cost);
+    }
+
+    function testWithdrawRevertNonOwner() public {
+        setSeason(100);
+        uint256 startMidnight = getNextMidnight();
+        uint256 numberNights = 10;
+        uint256 cost = rentalUnit.reservationCost(numberNights);
+
+        vm.deal(customer, cost);
+
+        assertEq(owner.balance, 0);
+
+        vm.prank(customer);
+        rentalUnit.reserve{value: cost}(customer, startMidnight, numberNights);
+
+        vm.prank(nonOwner);
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        rentalUnit.withdraw();
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           isTokenExpired
+    //////////////////////////////////////////////////////////////*/
+    function testRevertIfTokenDoesNotExist() public {
+        vm.expectRevert(abi.encodeWithSelector(Errors.ERC721NonexistentToken.selector, 999));
+        rentalUnit.isTokenExpired(999);
+    }
+
+    function testReturnFalseIfTokenNotExpired() public {
+        setSeason(100);
+        uint256 startMidnight = getNextMidnight();
+        uint256 numberNights = 10;
+        uint256 cost = rentalUnit.reservationCost(numberNights);
+
+        vm.deal(customer, cost);
+
+        vm.prank(customer);
+        rentalUnit.reserve{value: cost}(customer, startMidnight, numberNights);
+
+        assertFalse(rentalUnit.isTokenExpired(1));
+    }
+
+    function testReturnTrueIfTokenExpired() public {
+        setSeason(100);
+        uint256 startMidnight = getNextMidnight();
+        uint256 numberNights = 10;
+        uint256 end = startMidnight + numberNights * 1 days;
+        uint256 cost = rentalUnit.reservationCost(numberNights);
+
+        vm.deal(customer, cost);
+
+        vm.prank(customer);
+        rentalUnit.reserve{value: cost}(customer, startMidnight, numberNights);
+
+        assertFalse(rentalUnit.isTokenExpired(1));
+
+        vm.warp(end);
+        assertTrue(rentalUnit.isTokenExpired(1));
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           transfer
+    //////////////////////////////////////////////////////////////*/
+    function testTransferRevertSoulboundToken() public {
+        setSeason(100);
+        uint256 startMidnight = getNextMidnight();
+        uint256 numberNights = 10;
+        uint256 cost = rentalUnit.reservationCost(numberNights);
+        address friend = makeAddr("friend");
+
+        vm.deal(customer, cost);
+
+        vm.startPrank(customer);
+        rentalUnit.reserve{value: cost}(customer, startMidnight, numberNights);
+        vm.expectRevert(Errors.SoulboundTransferNotAllowed.selector);
+        rentalUnit.safeTransferFrom(customer, friend, 1);
+        vm.stopPrank();
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           startTime
+    //////////////////////////////////////////////////////////////*/
+
+    function testStartTimeRevertIfTokenDoesNotExist() public {
+        vm.expectRevert(abi.encodeWithSelector(Errors.ERC721NonexistentToken.selector, 999));
+        rentalUnit.startTime(999);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           endTime
+    //////////////////////////////////////////////////////////////*/
+    function testEndTimeRevertIfTokenDoesNotExist() public {
+        vm.expectRevert(abi.encodeWithSelector(Errors.ERC721NonexistentToken.selector, 999));
+        rentalUnit.endTime(999);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           expiryType
+    //////////////////////////////////////////////////////////////*/
+    function testExpiryTime() public {
+        assertEq(uint256(rentalUnit.expiryType()), uint256(IERC7858.EXPIRY_TYPE.TIME_BASED));
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           name
+    //////////////////////////////////////////////////////////////*/
+    function testName() public {
+        assertEq(rentalUnit.name(), "Test");
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           symbol
+    //////////////////////////////////////////////////////////////*/
+    function testSymbol() public {
+        assertEq(rentalUnit.symbol(), "T");
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           tokenUri
+    //////////////////////////////////////////////////////////////*/
+    function testTokenUri() public {
+        assertEq(rentalUnit.tokenURI(1), "");
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           supportsInterface
+    //////////////////////////////////////////////////////////////*/
+    function testSupportsInterface() public {
+        assertTrue(rentalUnit.supportsInterface(type(IERC7858).interfaceId), "Should support IERC7858 interface");
+        assertTrue(rentalUnit.supportsInterface(type(IERC721).interfaceId), "Should support IERC721 interface");
+        assertTrue(
+            rentalUnit.supportsInterface(type(IERC721Metadata).interfaceId), "Should support IERC721Metadata interface"
+        );
+        assertTrue(rentalUnit.supportsInterface(type(IERC165).interfaceId), "Should support IERC165 interface");
+        assertTrue(rentalUnit.supportsInterface(type(IRentalUnit).interfaceId), "Should support IRentalUnit interface");
+    }
+
+    function testUnsupportedInterface() public {
+        bytes4 fakeInterface = 0xffffffff;
+
+        assertFalse(rentalUnit.supportsInterface(fakeInterface), "Should not support unknown interface");
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           checkAvailability
+    //////////////////////////////////////////////////////////////*/
+    function testStartNotAtMidnightReverts() public {
+        vm.expectRevert(Errors.StartNotAtMidnight.selector);
+        rentalUnit.checkAvailability(1 days + 1, 2 days);
+    }
+
+    function testEndNotAtMidnightReverts() public {
+        vm.expectRevert(Errors.EndNotAtMidnight.selector);
+        rentalUnit.checkAvailability(1 days, 2 days + 1);
+    }
+
+    function testInvalidReservationPeriodReverts() public {
+        vm.expectRevert(Errors.InvalidReservationPeriod.selector);
+        rentalUnit.checkAvailability(2 days, 1 days);
+    }
+
+    function testOutOfSeasonReverts() public {
+        vm.expectRevert(Errors.OutOfSeason.selector);
+        rentalUnit.checkAvailability(1 days, 2 days);
     }
 }

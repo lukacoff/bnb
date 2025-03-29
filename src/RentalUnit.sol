@@ -81,7 +81,7 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         Season memory season = seasons[_currentSeason];
         uint256 end = start + numberNights * 1 days;
 
-        if (start < season.start || end > season.end) {
+        if (start == 0 || start < season.start || end > season.end) {
             revert Errors.OutOfSeason();
         }
 
@@ -179,7 +179,7 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         if (start >= end) revert Errors.InvalidReservationPeriod();
 
         Season memory season = seasons[_currentSeason];
-        if (start < season.start || end > season.end) {
+        if (start == 0 || start < season.start || end > season.end) {
             revert Errors.OutOfSeason();
         }
 
@@ -227,14 +227,8 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         if (_ownerOf(tokenId) == address(0)) {
             revert Errors.ERC721NonexistentToken(tokenId);
         }
-        uint256 startTimeCache = _reservations[tokenId].start;
-        uint256 endTimeCache = _reservations[tokenId].end;
-        // if start and end is {0, 0} mean token non-expirable and return false.
-        if (startTimeCache == 0 && endTimeCache == 0) {
-            return false;
-        } else {
-            return block.timestamp >= endTimeCache;
-        }
+
+        return block.timestamp >= _reservations[tokenId].end;
     }
 
     function startTime(uint256 tokenId) external view returns (uint256) {
@@ -270,7 +264,8 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721) returns (bool) {
-        return interfaceId == type(IERC7858).interfaceId || super.supportsInterface(interfaceId);
+        return interfaceId == type(IRentalUnit).interfaceId || interfaceId == type(IERC7858).interfaceId
+            || super.supportsInterface(interfaceId);
     }
 
     /*//////////////////////////////////////////////////////////////
