@@ -1,26 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.29;
 
+import {RentalInfo, Season} from "./RentalUnitStructs.sol";
+
 interface IRentalUnit {
-    struct RentalInfo {
-        string title;
-        string symbol;
-        string country;
-        string city;
-        string street;
-        string description;
-        string category;
-        string imagesURL;
-        uint256 capacity;
-        uint256 pricePerNight;
-    }
-
-    struct Season {
-        uint256 start;
-        uint256 end;
-        uint256 numberDays;
-    }
-
     function addSeason(uint256 start, uint256 numberNights) external returns (uint256);
 
     function setPause(bool state) external;

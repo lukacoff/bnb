@@ -5,6 +5,7 @@ import {ERC721} from "solady/tokens/ERC721.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {IERC7858} from "./ERC7858/IERC7858.sol";
 import {IRentalUnit} from "./IRentalUnit.sol";
+import {RentalInfo, Reservation, Season} from "./RentalUnitStructs.sol";
 import {Errors} from "./libs/Errors.sol";
 
 contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
@@ -16,12 +17,6 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
 
     event WithdrawBalance();
 
-    struct Reservation {
-        address customer;
-        uint256 start;
-        uint256 end;
-    }
-
     RentalInfo public rentalInfo;
     mapping(uint256 seasonId => Season season) public seasons;
     mapping(uint256 seasonId => uint256 calendar) private _bitCalendars;
@@ -31,47 +26,26 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
     uint256 private _seasonCounter;
     bool private _paused;
 
-    constructor(
-        address owner_,
-        string memory title_,
-        string memory symbol_,
-        string memory country_,
-        string memory city_,
-        string memory street_,
-        string memory description_,
-        string memory category_,
-        string memory imagesUrl_,
-        uint256 capacity_,
-        uint256 pricePerNight_
-    ) {
+    constructor(address owner_, RentalInfo memory info_) {
         _initializeOwner(owner_);
 
-        if (bytes(title_).length == 0) revert Errors.InvalidTitle();
+        if (bytes(info_.title).length == 0) revert Errors.InvalidTitle();
 
-        if (bytes(symbol_).length == 0) revert Errors.InvalidSymbol();
+        if (bytes(info_.symbol).length == 0) revert Errors.InvalidSymbol();
 
-        if (bytes(country_).length == 0) revert Errors.InvalidCountry();
+        if (bytes(info_.country).length == 0) revert Errors.InvalidCountry();
 
-        if (bytes(city_).length == 0) revert Errors.InvalidCity();
+        if (bytes(info_.city).length == 0) revert Errors.InvalidCity();
 
-        if (bytes(street_).length == 0) revert Errors.InvalidStreet();
+        if (bytes(info_.street).length == 0) revert Errors.InvalidStreet();
 
-        if (bytes(imagesUrl_).length == 0) revert Errors.InvalidImagesUrl();
+        if (bytes(info_.imagesUrl).length == 0) revert Errors.InvalidImagesUrl();
 
-        if (capacity_ == 0) revert Errors.InvalidCapacity();
+        if (info_.capacity == 0) revert Errors.InvalidCapacity();
 
-        if (pricePerNight_ == 0) revert Errors.InvalidPricePerNight();
+        if (info_.pricePerNight == 0) revert Errors.InvalidPricePerNight();
 
-        rentalInfo.title = title_;
-        rentalInfo.symbol = symbol_;
-        rentalInfo.country = country_;
-        rentalInfo.city = city_;
-        rentalInfo.street = street_;
-        rentalInfo.description = description_;
-        rentalInfo.category = category_;
-        rentalInfo.imagesURL = imagesUrl_;
-        rentalInfo.capacity = capacity_;
-        rentalInfo.pricePerNight = pricePerNight_;
+        rentalInfo = info_;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -105,14 +79,20 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         if (msg.value < reservationCost(numberNights)) revert Errors.InsufficientPayment();
 
         Season memory season = seasons[_currentSeason];
-        uint256 end = season.start + numberNights * 1 days;
+        uint256 end = start + numberNights * 1 days;
 
-        if (start <= season.start || end >= season.end) {
+        if (start < season.start || end > season.end) {
             revert Errors.OutOfSeason();
         }
 
-        uint256 startDay = 1 << (((start - season.start) / 1 days) - 1);
-        uint256 mask = ((1 << numberNights) - 1) << startDay;
+        uint256 startDay = ((start - season.start) / 1 days);
+        uint256 mask;
+
+        if (numberNights == 256) {
+            mask = type(uint256).max;
+        } else {
+            mask = ((1 << numberNights) - 1) << startDay;
+        }
 
         uint256 calendar = _bitCalendars[_currentSeason];
 
@@ -125,12 +105,14 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         _tokenIdCounter += 1;
 
         uint256 tokenId = _tokenIdCounter;
+        uint256 checkIn = start - 10 hours;
+        uint256 checkOut = end - 13 hours;
 
-        _reservations[tokenId] = Reservation({customer: customer, start: start, end: end});
+        _reservations[tokenId] = Reservation({customer: customer, start: checkIn, end: checkOut});
 
         _safeMint(customer, tokenId);
 
-        emit TokenExpiryUpdated(tokenId, start, end);
+        emit TokenExpiryUpdated(tokenId, checkIn, checkOut);
     }
 
     function setCurrentSeason(uint256 seasonId) external onlyOwner {
@@ -166,7 +148,7 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
     function updateImagesUrl(string calldata newImagesUrl) external onlyOwner {
         if (bytes(newImagesUrl).length == 0) revert Errors.InvalidImagesUrl();
 
-        rentalInfo.imagesURL = newImagesUrl;
+        rentalInfo.imagesUrl = newImagesUrl;
 
         emit RentalInfoUpdated();
     }
@@ -197,13 +179,19 @@ contract RentalUnit is IRentalUnit, ERC721, IERC7858, Ownable {
         if (start >= end) revert Errors.InvalidReservationPeriod();
 
         Season memory season = seasons[_currentSeason];
-        if (start <= season.start || end >= season.end) {
+        if (start < season.start || end > season.end) {
             revert Errors.OutOfSeason();
         }
 
-        uint256 startDay = 1 << (((start - season.start) / 1 days) - 1);
+        uint256 startDay = ((start - season.start) / 1 days);
         uint256 numberNights = (end - start) / 1 days;
-        uint256 mask = ((1 << numberNights) - 1) << startDay;
+        uint256 mask;
+
+        if (numberNights == 256) {
+            mask = type(uint256).max;
+        } else {
+            mask = ((1 << numberNights) - 1) << startDay;
+        }
 
         if ((_bitCalendars[_currentSeason] & mask) == 0) {
             return true;

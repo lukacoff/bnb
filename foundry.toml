@@ -3,6 +3,8 @@ src = "src"
 out = "out"
 libs = ["dependencies"]
 solc-version = "0.8.29"
+optimizer = true
+optimizer-runs = 200
 
 remappings = [
     "@openzeppelin/contracts/=dependencies/@openzeppelin-contracts-5.2.0/",
