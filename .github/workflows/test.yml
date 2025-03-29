@@ -25,7 +25,7 @@ jobs:
         with:
           version: nightly
 
-      - name: Install soldeer
+      - name: Install depedencies by soldeer
         run: |
           forge soldeer install
           
@@ -37,12 +37,6 @@ jobs:
         run: |
           forge fmt --check
         id: fmt
-
-      - name: Debug working directory
-        run: |
-          echo "Current path: $(pwd)"
-          echo "Listing project files:"
-          find /home/runner/work/ -type d -name "solady*"
 
       - name: Run Forge build
         run: |
