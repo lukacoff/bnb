@@ -5,7 +5,7 @@ import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {RentalUnit} from "./RentalUnit.sol";
 import {RentalInfo} from "./RentalUnitStructs.sol";
 
-contract RentalUintFactory {
+contract RentalUnitFactory {
     mapping(bytes32 => address) public deployedContracts;
 
     function deployRentalUnit(bytes32 _salt, address owner_, RentalInfo memory info_) external returns (address) {
