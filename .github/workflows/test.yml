@@ -38,6 +38,12 @@ jobs:
           forge fmt --check
         id: fmt
 
+      - name: Debug working directory
+        run: |
+          echo "Current path: $(pwd)"
+          echo "Listing project files:"
+          ls -R
+
       - name: Run Forge build
         run: |
           forge build --sizes
