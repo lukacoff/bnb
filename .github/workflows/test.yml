@@ -42,7 +42,7 @@ jobs:
         run: |
           echo "Current path: $(pwd)"
           echo "Listing project files:"
-          ls -R
+          ls -Rla ./dependencies/
 
       - name: Run Forge build
         run: |
