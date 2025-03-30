@@ -37,7 +37,7 @@ $ forge test
 | **Deployment Cost**                    | **Deployment Size** |        |        |        |         |
 | `2608244`                              | `13091`         |        |        |        |         |
 | **Function Name**                      | **min**         | **avg** | **median** | **max** | **# calls** |
-| `addSeason`                            | <span style="color:green">`23805`</span> | <span style="color:yellow">`90726`</span> | `112993` | <span style="color:red">`112993`</span> | `20`      |
+| `addSeason`                            | <span style="color:green">23805</span> | <span style="color:yellow">90726</span> | 112993 | <span style="color:red">112993</span> | 20      |
 | `checkAvailability`                    | <span style="color:green">`411`</span>   | <span style="color:yellow">`2707`</span>  | `1940`   | <span style="color:red">`9182`</span>   | `14`      |
 | `endTime`                              | <span style="color:green">`837`</span>   | <span style="color:yellow">`1204`</span>  | `837`    | <span style="color:red">`2674`</span>   | `5`       |
 | `expiryType`                           | <span style="color:green">`272`</span>   | `272`   | `272`    | `272`    | `1`       |
