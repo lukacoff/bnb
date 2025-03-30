@@ -1,17 +1,4 @@
-## Foundry
-
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
-
-Foundry consists of:
-
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
+## BNB
 
 ## Usage
 
@@ -27,47 +14,21 @@ $ forge build
 $ forge test
 ```
 
-### Format
+## Coverage Summary:
 
-```shell
-$ forge fmt
-```
+| Coverage Type    | Rate   | Total | Hit   |
+|------------------|--------|-------|-------|
+| **Lines**        | 100.0% | 111   | 111   |
+| **Functions**    | 100.0% | 29    | 29    |
+| **Branches**     | 100.0% | 38    | 38    |
 
-### Gas Snapshots
+---
 
-```shell
-$ forge snapshot
-```
+### Coverage by File:
 
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
-
-### Test Coverage
-<iframe src="./coverage/index.html" width="100%" height="500px"></iframe>
-
-[Open coverage](https://github.com/lukacoff/bnb/blob/main/coverage/index.html)
+| Filename               | Line Coverage | Branch Coverage | Function Coverage |
+|------------------------|---------------|------------------|-------------------|
+| [RentalUnit.sol](coverage/src/src/RentalUnit.sol.gcov.html)    | 100.0% (104/104) | 100.0% (36/36)  | 100.0% (27/27)   |
+| [RentalUnitFactory.sol](coverage/src/src/RentalUnitFactory.sol.gcov.html) | 100.0% (7/7)   | 100.0% (2/2)    | 100.0% (2/2)     |
 
 ### GAS Report
