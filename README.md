@@ -36,7 +36,7 @@ $ forge test
 |----------------------------------------|-----------------|--------|--------|--------|---------|
 | **Deployment Cost**                    | **Deployment Size** |        |        |        |         |
 | 2608244                              | 13091         |        |        |        |         |
-| **Function Name**                      | **min**         | **avg** | **median** | **max** | **# calls** |
+| **Function Name**                      | **min** | **avg** | **median** | **max** | **# calls** |
 | addSeason                            | $${\color{green}23805}$$ | $${\color{orange}90726}$$ | $${\color{orange}112993}$$  | $${\color{red}112993}$$ | 20      |
 | checkAvailability                    | $${\color{green}411}$$   | $${\color{orange}2707}$$  | $${\color{orange}1940}$$    | $${\color{red}9182}$$   | 14      |
 | endTime                              | $${\color{green}837}$$   | $${\color{orange}1204}$$  | $${\color{orange}837}$$    | $${\color{red}2674}$$   | 5       |
