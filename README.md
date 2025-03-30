@@ -66,4 +66,8 @@ $ cast --help
 ```
 
 ### Test Coverage
-[Open coverage](./coverage/index.html)
+<iframe src="./coverage/index.html" width="100%" height="500px"></iframe>
+
+[Open coverage](https://github.com/lukacoff/bnb/blob/main/coverage/index.html)
+
+### GAS Report
