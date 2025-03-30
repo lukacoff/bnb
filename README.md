@@ -69,7 +69,7 @@ $ forge test
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | **Deployment Cost**                                  | **Deployment Size** |         |         |         |         |
 | 3101400                                            | 14150         |         |         |         |         |
-| **Function Name**                                    | **min**         | **avg** | **median** | **max** | **# calls** |
+| **Function Name**                                    | **min** | **avg** | **median** | **max** | **# calls** |
 | computeTokenAddress                                | $${\color{green}41787}$$ | $${\color{orange}41787}$$ | $${\color{orange}41787}$$   | $${\color{red}41787}$$ | 1       |
 | deployRentalUnit                                   | $${\color{green}70670}$$ | $${\color{orange}1879478}$$ | $${\color{orange}2482414}$$ | $${\color{red}2482414}$$ | 4       |
 | deployedContracts                                  | $${\color{green}468}$$   | $${\color{orange}468}$$   | $${\color{orange}468}$$     | $${\color{red}468}$$   | 1       |
